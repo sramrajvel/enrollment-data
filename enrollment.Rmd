@@ -1,0 +1,77 @@
+---
+title: "enrollment"
+author: "Sanjana Ramrajvel"
+date: "11/7/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(gt)
+
+enrollment <- read_xlsx("class_enrollment_summary_by_term_9.16.19.xlsx", range = cell_rows(4:2796)) %>% clean_names()
+
+```
+
+### Table
+
+```{r, echo = FALSE}
+
+table_enrollment <- enrollment %>%
+  
+# selects only government classes
+  
+  filter(course_department == "Government") %>%
+  
+# arrange them in descending order by undergrad enrollment
+  
+  arrange(desc(u_grad)) %>%
+  
+# select only the variable we want to display in the table
+
+  select(course_title, course_name, u_grad) %>%
+  
+# rename the columns for the table
+  
+  rename(Number = course_title, Name = course_name, Enrollment = u_grad) %>%
+  
+# select only the 7 highest enrolled classes
+  
+  head(7)
+
+# create table
+
+gt(table_enrollment) %>%
+  
+# add a title and subtitle
+  
+  tab_header(title = "Highest Enrollment Government Classes", subtitle = "Fall 2019") %>%
+  
+# add in footnotes
+  
+  tab_footnote("Based on Harvard Registrar data from September 16, 2019.", cells_title(groups = "title")) %>%
+  tab_footnote("Undergraduate enrollment only.", cells_data(columns = 3, rows = 1))
+
+```
+
+
+### Graphic
+
+```{r, echo = FALSE, warning = FALSE}
+
+enrollment_filter <- enrollment %>%
+  filter(total > 0)
+
+enrollment_filter %>%
+  ggplot(aes(x = total)) +
+    geom_histogram(binwidth = 1) +
+    xlim(0,70) +
+    ylim(0,600) +
+    labs(title = "Frequency of different class sizes", x = "Enrollment", y = "Frequency")
+
+```
+
